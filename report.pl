@@ -3,7 +3,6 @@
 use v5.10.1;
 use warnings;
 
-
 # Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,Upload,Share,IP Address
 
 my $help_detail = qq{
@@ -30,11 +29,15 @@ my $km = 0;
 my $ping = 0;
 
 while (<F>) {
+	my $m = 0;
 	my @r = split(/,/, $_);
-	$km += $r[4];
-	$ping += $r[5];
-	$dlt += $r[6];
-	$ult += $r[7];
+	if ($#r == 10) {
+		$m = 1;
+	}
+	$km += $r[4+$m];
+	$ping += $r[5+$m];
+	$dlt += $r[6+$m];
+	$ult += $r[7+$m];
 	$i++;
 }
 
