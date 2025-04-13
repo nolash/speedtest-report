@@ -3,6 +3,8 @@
 use v5.10.1;
 use warnings;
 
+use DateTime::Format::ISO8601;
+
 # Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,Upload,Share,IP Address
 
 my $help_detail = qq{
@@ -28,24 +30,23 @@ my $dlu = 0;
 my $km = 0;
 my $ping = 0;
 
+print "# timestamp\tdownload\tupload\n";
 while (<F>) {
 	my $m = 0;
 	my @r = split(/,/, $_);
 	if ($#r == 10) {
 		$m = 1;
 	}
-	$km += $r[4+$m];
-	$ping += $r[5+$m];
-	$dlt += $r[6+$m];
-	$ult += $r[7+$m];
+	my $t = DateTime::Format::ISO8601->parse_datetime($r[3+$m]);
+	#	print  $t->strftime("%Y%m%d%H%M") . "\t" . $r[6+$m] . "\t" . $r[7+$m] . "\n";
+	print  $t->epoch . "\t" . $r[6+$m] . "\t" . $r[7+$m] . "\t" . $r[4+$m] . "\n";
+	#print  $r[3+$m] . "\t" . $r[6+$m] . "\t" . $r[7+$m] . "\n";
+
+#	$km += $r[4+$m];
+#	$ping += $r[5+$m];
+#	$dlt += $r[6+$m];
+#	$ult += $r[7+$m];
 	$i++;
 }
 
 close(F);
-
-print qq{Samples:\t$i
-Download avg:\t} . ($dlt / $i) . qq{
-Upload avg:\t} . ($ult / $i) . qq{
-Ping avg:\t} . ($ping / $i) . qq{
-Distance avg:\t} . ($km / $i) . qq{km
-};
