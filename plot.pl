@@ -6,6 +6,8 @@ use DateTime;
 use DateTime::Duration;
 use DateTime::Format::Strptime;
 use DateTime::Format::ISO8601;
+use Getopt::Std;
+use Config::Simple;
 
 # Server ID,Sponsor,Server Name,Timestamp,Distance,Ping,Download,Upload,Share,IP Address
 
@@ -13,6 +15,10 @@ my $help_detail = qq{
 
 file should be one or more records per line from output of speedtest-cli --csv
 };
+
+my %opt = ();
+getopts("c:d:", \%opt);
+
 
 if ($#ARGV < 0) {
 	die "usage: $0 <file>" . $help_detail;
@@ -24,7 +30,20 @@ if (! -f $fp) {
 	die "no such file " . $fp . $help_detail;
 }
 
-my $days = $ARGV[1];
+my %cfg;
+my $range_bits = 1000000000;
+my $range_km = 500;
+if ($opt{c}) {
+	Config::Simple->import_from($opt{c}, \%cfg);
+	if (defined $cfg{'gnuplot.range_bits'}) {
+		$range_bits = $cfg{'gnuplot.range_bits'};
+	}
+	if (defined $cfg{'gnuplot.range_km'}) {
+		$range_km = $cfg{'gnuplot.range_km'};
+	}
+}
+
+my $days = $opt{d};
 my $dt = undef;
 if (defined $days) {
 	if ($days!~/^\d+$/) {
@@ -74,12 +93,12 @@ print F qq{set xdata time
 set xlabel "Time"
 set ylabel "Bits per second (bps)"
 set timefmt "%s"
-set yrange [0.0:1000000000.0]
+set yrange [0.0:$range_bits.0]
 set format y '%.0f'
 set y2tics
 set ytics nomirror
 set y2label "Distance (km)"
-set y2range [0:1000]
+set y2range [0:$range_km]
 set xrange [$ts_min:$ts]
 set size 1,1
 set term svg size 1000,400
