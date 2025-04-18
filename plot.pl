@@ -17,7 +17,7 @@ file should be one or more records per line from output of speedtest-cli --csv
 };
 
 my %opt = ();
-getopts("c:d:", \%opt);
+getopts("c:d:k", \%opt);
 
 
 if ($#ARGV < 0) {
@@ -41,6 +41,10 @@ if ($opt{c}) {
 	if (defined $cfg{'gnuplot.range_km'}) {
 		$range_km = $cfg{'gnuplot.range_km'};
 	}
+}
+
+if ($opt{k}) {
+	$cfg{include_km} = "1";
 }
 
 my $days = $opt{d};
@@ -95,19 +99,31 @@ set ylabel "Bits per second (bps)"
 set timefmt "%s"
 set yrange [0.0:$range_bits.0]
 set format y '%.0f'
-set y2tics
+};
+
+if ($cfg{include_km}) {
+	print F qq{set y2tics
 set ytics nomirror
 set y2label "Distance (km)"
 set y2range [0:$range_km]
+};
+}
+
+print F qq{
 set xrange [$ts_min:$ts]
 set size 1,1
 set term svg size 1000,400
 set output 'samples.svg'
-plot \\
-	'samples.dat' using 1:2 title "Upload" with lines, \\
-	'samples.dat' using 1:3 title "Download" with lines, \\
-	'samples.dat' using 1:4 title "Km" with lines axis x1y2
 };
+
+print F qq{plot \\
+'samples.dat' using 1:2 title "Upload" with lines, \\
+'samples.dat' using 1:3 title "Download" with lines,};
+if ($cfg{include_km}) {
+	print F qq{ \\
+'samples.dat' using 1:4 title "Km" with lines axis x1y2};
+}
+print F "\n";
 close(F);
 
 system('gnuplot', 'report.gnuplot');
